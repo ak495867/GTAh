@@ -280,6 +280,25 @@ python run_benchmark.py \
 
 Outputs 6 PNGs + 6 JSONs to `results/`.
 
+### Train Mini-LM (GPU / Colab Benchmark)
+
+Train a full Transformer language model comparing GTAH against Dense attention on TinyShakespeare with Automatic Mixed Precision (AMP), gradient accumulation, and VRAM tracking:
+
+```bash
+python train.py \
+  --epochs 20 \
+  --batch-size 64 \
+  --seq-len 256 \
+  --d-model 256 \
+  --num-heads 8 \
+  --num-layers 6 \
+  --window 64 \
+  --fan-out 4 \
+  --out-dir results/training
+```
+
+Or open [`GTAh_Colab_Training.ipynb`](GTAh_Colab_Training.ipynb) directly in Google Colab to train on T4/A100 GPU and generate loss/perplexity/throughput plots inline.
+
 ### Use Gabriel Attention in your model
 
 ```python

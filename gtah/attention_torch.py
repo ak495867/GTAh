@@ -30,21 +30,6 @@ def _gather_bh(src: torch.Tensor, idx: torch.Tensor) -> torch.Tensor:
     return torch.gather(src, 1, flat_exp).view(BH, idx.shape[0], M, dh)
 
 
-def _boundary_idx_torch(N: int, W: int, stride: int, n_clus: int, fan_out: int, device: torch.device):
-    half_f      = fan_out // 2
-    i_arr       = torch.arange(N, device=device)
-    left_bound  = (torch.clamp(i_arr - W, min=0) - 1).div(stride, rounding_mode="floor")
-    right_bound = torch.clamp(i_arr + W + 1, max=N).div(stride, rounding_mode="floor")
-
-    left_offs   = left_bound[:, None]  - torch.arange(half_f, device=device)[None, :]
-    right_offs  = right_bound[:, None] + torch.arange(half_f, device=device)[None, :]
-    clus_idx    = torch.cat([left_offs, right_offs], dim=1)
-
-    valid    = (clus_idx >= 0) & (clus_idx < n_clus)
-    clus_idx = clus_idx.clamp(0, n_clus - 1)
-    return clus_idx, valid
-
-
 class GabrielAttention(nn.Module):
     def __init__(
         self,
@@ -75,7 +60,7 @@ class GabrielAttention(nn.Module):
             return min(int(math.ceil(math.log(self.epsilon) / math.log(self.q_decay))), max_lvl)
         return max_lvl
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, causal: bool = False) -> torch.Tensor:
         B, N, D  = x.shape
         dh       = self.d_head
         H        = self.num_heads
@@ -91,32 +76,45 @@ class GabrielAttention(nn.Module):
         k_pyr, v_pyr = _build_kv_pyramid_torch(K, V)
         cutoff        = self._cutoff(len(k_pyr) - 1)
 
-        i_arr       = torch.arange(N, device=device)
-        offsets     = torch.arange(-W, W + 1, device=device)
-        local_idx   = (i_arr[:, None] + offsets[None, :]).clamp(0, N - 1)
-        local_valid = (i_arr[:, None] + offsets[None, :] >= 0) & (i_arr[:, None] + offsets[None, :] < N)
+        i_arr   = torch.arange(N, device=device)
+        offsets = torch.arange(-W, 1, device=device) if causal else torch.arange(-W, W + 1, device=device)
+        local_raw   = i_arr[:, None] + offsets[None, :]
+        local_valid = (local_raw >= 0) & (local_raw < N)
+        local_idx   = local_raw.clamp(0, N - 1)
 
-        K_local  = _gather_bh(K, local_idx)
-        V_local  = _gather_bh(V, local_idx)
+        K_local = _gather_bh(K, local_idx)
+        V_local = _gather_bh(V, local_idx)
 
-        local_s  = torch.einsum("bnd,bnwd->bnw", Q, K_local) * scale
-        local_s  = local_s.masked_fill(~local_valid[None, :, :], -1e4)
+        local_s = torch.einsum("bnd,bnwd->bnw", Q, K_local) * scale
+        local_s = local_s.masked_fill(~local_valid[None, :, :], -1e4)
 
-        max_s    = local_s.max(dim=-1).values
-        exp_l    = torch.exp(local_s - max_s.unsqueeze(-1))
-        exp_l    = exp_l.masked_fill(~local_valid[None, :, :], 0.0)
-        sum_exp  = exp_l.sum(dim=-1)
-        out_num  = torch.einsum("bnw,bnwd->bnd", exp_l, V_local)
+        max_s   = local_s.max(dim=-1).values
+        exp_l   = torch.exp(local_s - max_s.unsqueeze(-1))
+        exp_l   = exp_l.masked_fill(~local_valid[None, :, :], 0.0)
+        sum_exp = exp_l.sum(dim=-1)
+        out_num = torch.einsum("bnw,bnwd->bnd", exp_l, V_local)
 
         for lvl in range(1, cutoff + 1):
-            lvl_k  = k_pyr[lvl]
-            lvl_v  = v_pyr[lvl]
-            n_clus = lvl_k.shape[1]
-            stride = 1 << lvl
-            env    = self.q_decay ** lvl
+            lvl_k   = k_pyr[lvl]
+            lvl_v   = v_pyr[lvl]
+            n_clus  = lvl_k.shape[1]
+            stride  = 1 << lvl
+            env     = self.q_decay ** lvl
             log_env = math.log(max(env, 1e-30))
+            half_f  = self.fan_out // 2
 
-            clus_idx, valid = _boundary_idx_torch(N, W, stride, n_clus, self.fan_out, device)
+            left_bound = (torch.clamp(i_arr - W, min=0) - 1).div(stride, rounding_mode="floor")
+            left_offs  = left_bound[:, None] - torch.arange(half_f, device=device)[None, :]
+
+            if causal:
+                clus_idx = left_offs
+            else:
+                right_bound = torch.clamp(i_arr + W + 1, max=N).div(stride, rounding_mode="floor")
+                right_offs  = right_bound[:, None] + torch.arange(half_f, device=device)[None, :]
+                clus_idx    = torch.cat([left_offs, right_offs], dim=1)
+
+            valid    = (clus_idx >= 0) & (clus_idx < n_clus)
+            clus_idx = clus_idx.clamp(0, n_clus - 1)
 
             K_lvl = _gather_bh(lvl_k, clus_idx)
             V_lvl = _gather_bh(lvl_v, clus_idx)
@@ -124,16 +122,16 @@ class GabrielAttention(nn.Module):
             lvl_s = torch.einsum("bnd,bnfd->bnf", Q, K_lvl) * scale + log_env
             lvl_s = lvl_s.masked_fill(~valid[None, :, :], -1e4)
 
-            lvl_max  = lvl_s.max(dim=-1).values
-            new_max  = torch.maximum(max_s, lvl_max)
-            rescale  = torch.exp(max_s - new_max)
+            lvl_max = lvl_s.max(dim=-1).values
+            new_max = torch.maximum(max_s, lvl_max)
+            rescale = torch.exp(max_s - new_max)
 
-            exp_lvl  = torch.exp(lvl_s - new_max.unsqueeze(-1))
-            exp_lvl  = exp_lvl.masked_fill(~valid[None, :, :], 0.0)
+            exp_lvl = torch.exp(lvl_s - new_max.unsqueeze(-1))
+            exp_lvl = exp_lvl.masked_fill(~valid[None, :, :], 0.0)
 
-            sum_exp  = sum_exp * rescale + exp_lvl.sum(dim=-1)
-            out_num  = out_num * rescale.unsqueeze(-1) + torch.einsum("bnf,bnfd->bnd", exp_lvl, V_lvl)
-            max_s    = new_max
+            sum_exp = sum_exp * rescale + exp_lvl.sum(dim=-1)
+            out_num = out_num * rescale.unsqueeze(-1) + torch.einsum("bnf,bnfd->bnd", exp_lvl, V_lvl)
+            max_s   = new_max
 
         out = out_num / sum_exp.unsqueeze(-1).clamp(min=1e-30)
         out = out.view(B, H, N, dh).transpose(1, 2).contiguous().view(B, N, D)
@@ -145,7 +143,6 @@ class GabrielAttention(nn.Module):
         i_arr  = np.arange(N)
         total  = 0
 
-        local_idx = np.clip(i_arr[:, None] + np.arange(-W, W + 1)[None, :], 0, N - 1)
         local_valid = (
             (i_arr[:, None] + np.arange(-W, W + 1)[None, :] >= 0) &
             (i_arr[:, None] + np.arange(-W, W + 1)[None, :] < N)
@@ -158,7 +155,7 @@ class GabrielAttention(nn.Module):
             half_f  = self.fan_out // 2
             left_b  = (np.maximum(0, i_arr - W).astype(int) - 1) // stride
             right_b = np.minimum(N, i_arr + W + 1) // stride
-            left_o  = left_b[:, None]  - np.arange(half_f)[None, :]
+            left_o  = left_b[:, None] - np.arange(half_f)[None, :]
             right_o = right_b[:, None] + np.arange(half_f)[None, :]
             cidx    = np.concatenate([left_o, right_o], axis=1)
             total  += int(((cidx >= 0) & (cidx < n_clus)).sum())
@@ -179,7 +176,7 @@ class DenseAttention(nn.Module):
         self.v_proj   = nn.Linear(d_model, d_model, bias=False)
         self.out_proj = nn.Linear(d_model, d_model, bias=False)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, causal: bool = False) -> torch.Tensor:
         B, N, D = x.shape
 
         Q = self.q_proj(x).view(B, N, self.num_heads, self.d_head).transpose(1, 2)
@@ -187,7 +184,11 @@ class DenseAttention(nn.Module):
         V = self.v_proj(x).view(B, N, self.num_heads, self.d_head).transpose(1, 2)
 
         scores = (Q @ K.transpose(-2, -1)) / (self.d_head ** 0.5)
-        probs  = F.softmax(scores, dim=-1)
 
-        out = (probs @ V).transpose(1, 2).contiguous().view(B, N, D)
+        if causal:
+            mask   = torch.triu(torch.ones(N, N, device=x.device, dtype=torch.bool), diagonal=1)
+            scores = scores.masked_fill(mask, -1e4)
+
+        probs = F.softmax(scores, dim=-1)
+        out   = (probs @ V).transpose(1, 2).contiguous().view(B, N, D)
         return self.out_proj(out)
