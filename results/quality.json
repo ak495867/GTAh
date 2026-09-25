@@ -1,0 +1,74 @@
+[
+  {
+    "N": 64,
+    "abs_error": 6.618185147440517,
+    "rel_error": 0.5339391046921832,
+    "max_token_error": 0.5530651969194037,
+    "mean_cos_sim": 0.8827228989826997,
+    "min_cos_sim": 0.514408651024303,
+    "dense_evals": 4096,
+    "gabriel_evals": 7232,
+    "evals_per_query": 113,
+    "sparsity_ratio": -0.765625
+  },
+  {
+    "N": 128,
+    "abs_error": 13.874443241835518,
+    "rel_error": 1.0550664940487757,
+    "max_token_error": 0.8685811734995744,
+    "mean_cos_sim": 0.6792753733061208,
+    "min_cos_sim": 0.11804408256755623,
+    "dense_evals": 16384,
+    "gabriel_evals": 15488,
+    "evals_per_query": 121,
+    "sparsity_ratio": 0.0546875
+  },
+  {
+    "N": 256,
+    "abs_error": 21.217394320155233,
+    "rel_error": 1.530365083901998,
+    "max_token_error": 0.7541860143789542,
+    "mean_cos_sim": 0.5210801276299863,
+    "min_cos_sim": 0.14228827547421122,
+    "dense_evals": 65536,
+    "gabriel_evals": 33024,
+    "evals_per_query": 129,
+    "sparsity_ratio": 0.49609375
+  },
+  {
+    "N": 512,
+    "abs_error": 31.41320219430228,
+    "rel_error": 2.3830550541039983,
+    "max_token_error": 1.1378528754750885,
+    "mean_cos_sim": 0.35792729984853056,
+    "min_cos_sim": -0.0775460415650935,
+    "dense_evals": 262144,
+    "gabriel_evals": 70144,
+    "evals_per_query": 137,
+    "sparsity_ratio": 0.732421875
+  },
+  {
+    "N": 1024,
+    "abs_error": 45.5731834245477,
+    "rel_error": 3.316969617857184,
+    "max_token_error": 1.2285709398460953,
+    "mean_cos_sim": 0.26040484372047595,
+    "min_cos_sim": -0.1278492289397083,
+    "dense_evals": 1048576,
+    "gabriel_evals": 148480,
+    "evals_per_query": 145,
+    "sparsity_ratio": 0.8583984375
+  },
+  {
+    "N": 2048,
+    "abs_error": 65.82163069135159,
+    "rel_error": 5.1963296018274505,
+    "max_token_error": 1.4460937877259232,
+    "mean_cos_sim": 0.171195234919865,
+    "min_cos_sim": -0.3509022436457472,
+    "dense_evals": 4194304,
+    "gabriel_evals": 313344,
+    "evals_per_query": 153,
+    "sparsity_ratio": 0.92529296875
+  }
+]

@@ -1,0 +1,80 @@
+[
+  {
+    "N": 1024,
+    "abs_error": 48.33485904753826,
+    "rel_error": 3.540179112962805,
+    "max_token_error": 0.9279462203575813,
+    "mean_cos_sim": 0.2536583371107111,
+    "min_cos_sim": -0.16916443583747484,
+    "dense_evals": 1048576,
+    "gabriel_evals": 87040,
+    "evals_per_query": 85,
+    "sparsity_ratio": 0.9169921875,
+    "fan_out": 2
+  },
+  {
+    "N": 1024,
+    "abs_error": 47.4090946245255,
+    "rel_error": 3.4723735594046476,
+    "max_token_error": 0.9154236919385077,
+    "mean_cos_sim": 0.2562218985954249,
+    "min_cos_sim": -0.17226393058004932,
+    "dense_evals": 1048576,
+    "gabriel_evals": 107520,
+    "evals_per_query": 105,
+    "sparsity_ratio": 0.8974609375,
+    "fan_out": 4
+  },
+  {
+    "N": 1024,
+    "abs_error": 46.52300852275018,
+    "rel_error": 3.4074741561249895,
+    "max_token_error": 0.9043754412487002,
+    "mean_cos_sim": 0.25921323764413984,
+    "min_cos_sim": -0.17454374837911174,
+    "dense_evals": 1048576,
+    "gabriel_evals": 128000,
+    "evals_per_query": 125,
+    "sparsity_ratio": 0.8779296875,
+    "fan_out": 6
+  },
+  {
+    "N": 1024,
+    "abs_error": 45.68045580159966,
+    "rel_error": 3.34576325836374,
+    "max_token_error": 0.8966946511610222,
+    "mean_cos_sim": 0.26203071295143254,
+    "min_cos_sim": -0.16898120053792648,
+    "dense_evals": 1048576,
+    "gabriel_evals": 148480,
+    "evals_per_query": 145,
+    "sparsity_ratio": 0.8583984375,
+    "fan_out": 8
+  },
+  {
+    "N": 1024,
+    "abs_error": 44.09060157011462,
+    "rel_error": 3.229317925660416,
+    "max_token_error": 0.8713371223246912,
+    "mean_cos_sim": 0.26810647320974856,
+    "min_cos_sim": -0.15504106379437554,
+    "dense_evals": 1048576,
+    "gabriel_evals": 189440,
+    "evals_per_query": 185,
+    "sparsity_ratio": 0.8193359375,
+    "fan_out": 12
+  },
+  {
+    "N": 1024,
+    "abs_error": 42.60614247149478,
+    "rel_error": 3.120592024757034,
+    "max_token_error": 0.8498654101167021,
+    "mean_cos_sim": 0.2738827347513802,
+    "min_cos_sim": -0.15087676675547484,
+    "dense_evals": 1048576,
+    "gabriel_evals": 230400,
+    "evals_per_query": 225,
+    "sparsity_ratio": 0.7802734375,
+    "fan_out": 16
+  }
+]

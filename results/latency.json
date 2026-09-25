@@ -1,0 +1,80 @@
+[
+  {
+    "N": 64,
+    "dense_latency_s": 6.209999992279336e-05,
+    "gabriel_latency_s": 0.0015106999999261461,
+    "speedup": 0.04110677164614368,
+    "dense_flops": 1048576,
+    "gabriel_flops": 925696,
+    "flop_ratio": 0.8828125,
+    "dense_ram_mb": 0.15717315673828125,
+    "gabriel_ram_mb": 2.5902481079101562,
+    "evals_per_query": 113,
+    "sparsity_ratio": -0.765625
+  },
+  {
+    "N": 128,
+    "dense_latency_s": 0.0003375999995114398,
+    "gabriel_latency_s": 0.0026257999998051673,
+    "speedup": 0.12857034029114536,
+    "dense_flops": 4194304,
+    "gabriel_flops": 1982464,
+    "flop_ratio": 0.47265625,
+    "dense_ram_mb": 0.5009231567382812,
+    "gabriel_ram_mb": 5.1724700927734375,
+    "evals_per_query": 121,
+    "sparsity_ratio": 0.0546875
+  },
+  {
+    "N": 256,
+    "dense_latency_s": 0.0006011000004946254,
+    "gabriel_latency_s": 0.0056420999999318155,
+    "speedup": 0.10653834574039625,
+    "dense_flops": 16777216,
+    "gabriel_flops": 4227072,
+    "flop_ratio": 0.251953125,
+    "dense_ram_mb": 1.7509231567382812,
+    "gabriel_ram_mb": 10.337997436523438,
+    "evals_per_query": 129,
+    "sparsity_ratio": 0.49609375
+  },
+  {
+    "N": 512,
+    "dense_latency_s": 0.00352279999970051,
+    "gabriel_latency_s": 0.015373100000033446,
+    "speedup": 0.22915352139079598,
+    "dense_flops": 67108864,
+    "gabriel_flops": 8978432,
+    "flop_ratio": 0.1337890625,
+    "dense_ram_mb": 6.500923156738281,
+    "gabriel_ram_mb": 20.668563842773438,
+    "evals_per_query": 137,
+    "sparsity_ratio": 0.732421875
+  },
+  {
+    "N": 1024,
+    "dense_latency_s": 0.01498520000041026,
+    "gabriel_latency_s": 0.031213999999636144,
+    "speedup": 0.48007945154690007,
+    "dense_flops": 268435456,
+    "gabriel_flops": 19005440,
+    "flop_ratio": 0.07080078125,
+    "dense_ram_mb": 25.00092315673828,
+    "gabriel_ram_mb": 41.32945251464844,
+    "evals_per_query": 145,
+    "sparsity_ratio": 0.8583984375
+  },
+  {
+    "N": 2048,
+    "dense_latency_s": 0.06152959999963059,
+    "gabriel_latency_s": 0.07467359999918699,
+    "speedup": 0.8239806303740612,
+    "dense_flops": 1073741824,
+    "gabriel_flops": 40108032,
+    "flop_ratio": 0.037353515625,
+    "dense_ram_mb": 98.00092315673828,
+    "gabriel_ram_mb": 82.65098571777344,
+    "evals_per_query": 153,
+    "sparsity_ratio": 0.92529296875
+  }
+]
